@@ -2,3 +2,6 @@
 ^\.Rproj\.user$
 ^data-raw$
 ^LICENSE\.md$
+^examples\.R$
+^mcgillHDA_2021_slides\.pdf$
+^mcgillHDA_2021_handout\.pdf$

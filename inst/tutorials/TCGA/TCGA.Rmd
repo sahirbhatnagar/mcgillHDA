@@ -1,0 +1,135 @@
+---
+title: "Tutorial"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+tutorial_options(exercise.timelimit = 1e6)
+```
+
+```{r setup, include=FALSE}
+library(learnr)
+
+```
+
+
+# TCGA Data
+
+### Exercise 
+
+*Here's a simple exercise with an empty code chunk provided for entering the answer.*
+
+Write the R code required to add two plus two:
+
+```{r two-plus-two, exercise=TRUE}
+
+```
+
+### Exercise with Code
+
+*Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
+
+Now write a function that adds any two numbers and then call it:
+
+```{r add-function, exercise=TRUE, exercise.lines = 5}
+
+attachData('bcTCGA')
+set.seed(1)   # Not necessary, but your CV results might look different than mine with a different seed
+
+# Model fitting and CV
+cvfit <- cv.glmnet(X, y)
+fit <- cvfit$glmnet.fit
+xlim <- log(c(fit$lambda[1], cvfit$lambda.min))
+plot(fit, xlim=xlim, xvar="lambda")
+plot(cvfit)
+
+## lam values
+max(fit$lambda)
+cvfit$lambda.min
+cvfit$lambda.1se
+
+## R^2
+max(1-cvfit$cvm/var(y))
+
+## coef
+b <- coef(cvfit)
+b[which(b > 0.15),,drop=FALSE]
+
+## coef (cont'd)
+b <- coef(fit, s=0.2)
+sum(b != 0)
+b[which(b!=0),,drop=FALSE]
+
+## predict
+predict(cvfit, X[85,,drop=FALSE])
+sapply(predict(fit, type="nonzero"), length)
+
+# Slides 5-6
+Fig2.10(cvfit)
+
+# AIC/BIC (Slide 8)
+fit1 <- ncvreg(X, y, penalty='lasso', lambda=cvfit$lambda)
+fit2 <- ncvreg(X, y, penalty='lasso', lambda.min=0.001)
+Fig2.11(fit1)
+Fig2.11(fit2)
+
+# AICc
+Fig2.11_aicc <- function(fit, ...) {
+  lam <- log(fit$lambda)
+  ll <- logLik(fit)
+  df <- pmin(as.numeric(attr(ll, "df")), fit$n-1)
+  print(range(df))
+  IC <- cbind(AIC(fit), BIC(fit), AIC(fit) + 2 * df * (df + 1)/(fit$n - df - 1))
+  matplot(lam, IC, xlim = rev(range(lam)), col = hdrm:::pal(3), type = "l", 
+          lwd = 3, lty = 1, bty = "n", xlab = expression(lambda), 
+          xaxt = "n", las = 1, ylab = "AIC/BIC", ...)
+  at <- seq(max(lam), min(lam), length = 5)
+  axis(1, at = at, labels = round(exp(at), 2))
+  hdrm:::toplegend(legend = c("AIC", "BIC", "AICc"), col = hdrm:::pal(3), lwd = 3)
+}
+Fig2.11_aicc(fit1)
+Fig2.11_aicc(fit2, ylim=c(-100, 2000))
+```
+
+## Topic 2
+
+### Exercise with Hint
+
+*Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.*
+
+Modify the following code to limit the number of rows printed to 5:
+
+```{r print-limit, exercise=TRUE, exercise.eval=TRUE}
+mtcars
+```
+
+```{r print-limit-hint}
+head(mtcars)
+```
+
+### Quiz
+
+*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
+
+Some questions to verify that you understand the purposes of various base and recommended R packages:
+
+```{r quiz}
+quiz(
+  question("Which package contains functions for installing other R packages?",
+    answer("base"),
+    answer("tools"),
+    answer("utils", correct = TRUE),
+    answer("codetools")
+  ),
+  question("Which of the R packages listed below are used to create plots?",
+    answer("lattice", correct = TRUE),
+    answer("tools"),
+    answer("stats"),
+    answer("grid", correct = TRUE)
+  )
+)
+```
+
